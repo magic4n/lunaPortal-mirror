@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lunaPortal — chatoite — LunarisAOSP</title>
+  
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            luna: {
+              black: '#050505',
+              card: '#0c0c0e',
+              border: '#1f1f23',
+              hover: '#27272a',
+              muted: '#71717a',
+              subtle: '#a1a1aa',
+              light: '#f4f4f5',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'float-delayed': 'float 8s ease-in-out 2s infinite',
+            'fade-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+            'glow-pulse': 'lunarGlow 6s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(16px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            lunarGlow: {
+              '0%': { opacity: '0.3', transform: 'scale(0.96)' },
+              '100%': { opacity: '0.65', transform: 'scale(1.05)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Monochrome noise and ambient grid */
+    .bg-grid-pattern {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+    
+    .lunar-glow {
+      background: radial-gradient(circle 600px at 50% 12%, rgba(255, 255, 255, 0.08), transparent 75%);
+    }
+
+    /* Staggered animation delays */
+    .delay-75 { animation-delay: 75ms; }
+    .delay-150 { animation-delay: 150ms; }
+    .delay-200 { animation-delay: 200ms; }
+    .delay-250 { animation-delay: 250ms; }
+    .delay-300 { animation-delay: 300ms; }
+    .delay-400 { animation-delay: 400ms; }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+  </style>
+</head>
+
+<body class="bg-luna-black text-luna-light font-sans antialiased min-h-screen relative selection:bg-white selection:text-black overflow-x-hidden">
+  <!-- Interactive Animated Stardust Background Canvas -->
+  <canvas id="lunar-canvas" class="fixed inset-0 pointer-events-none z-0 w-full h-full"></canvas>
+  <div class="fixed inset-0 bg-grid-pattern pointer-events-none z-0 opacity-40"></div>
+  <div class="fixed -top-48 left-1/2 -translate-x-1/2 w-[750px] h-[550px] lunar-glow pointer-events-none z-0 animate-glow-pulse"></div>
+  <div class="fixed top-1/3 -right-24 w-80 h-80 bg-white/[0.02] rounded-full blur-[110px] pointer-events-none z-0 animate-float-delayed"></div>
+
+  <!-- Main Container -->
+  <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 flex flex-col min-h-screen">
+    
+    <!-- Top Bar Navigation -->
+    <header class="flex items-center justify-between border-b border-luna-border pb-6 mb-12 animate-fade-up">
+      <div class="flex items-center space-x-3">
+        <!-- Moon Icon with subtle hover glow -->
+        <div class="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-700/80 flex items-center justify-center shadow-inner group hover:border-zinc-400 transition-colors">
+          <svg class="w-5 h-5 text-zinc-100 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-sm font-semibold tracking-wider uppercase text-zinc-300">lunaPortal</span>
+          <span class="text-xs text-zinc-600 block leading-tight font-mono">v14.0 // official</span>
+        </div>
+      </div>
+
+      <!-- Quick status indicator & maintainer link -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-mono text-zinc-400 shadow-sm">
+          <span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span>
+          <span>BUILD ACTIVE</span>
+        </div>
+        <a href="#telegram-card" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
+          Support
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Hero / Title Section -->
+    <section class="text-center md:text-left mb-12 animate-fade-up delay-75">
+      <!-- Tag / Badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-md bg-zinc-900/80 border border-zinc-800 text-xs font-mono tracking-wide text-zinc-400 hover:border-zinc-700 transition-colors">
+        <span class="text-zinc-200 font-semibold">Device:</span> chatoite
+        <span class="text-zinc-600">|</span>
+        <span class="text-zinc-200 font-semibold">OS:</span> LunarisAOSP
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+        LunarisAOSP — download
+      </h1>
+      
+      <p class="text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed mb-6">
+        Verified official releases, rapid CDN mirrors, and community distribution channels for codename <span class="text-zinc-200 font-medium">chatoite</span>.
+      </p>
+
+      <!-- Maintainer & Metadata Strip -->
+      <div class="inline-flex flex-wrap items-center gap-4 sm:gap-6 p-3.5 rounded-xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm shadow-inner">
+        <!-- Maintainer -->
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-mono text-zinc-300 font-bold border border-zinc-700">
+            e
+          </div>
+          <div class="text-xs">
+            <span class="text-zinc-500 block text-[10px] uppercase tracking-wider">Maintainer</span>
+            <span class="text-white font-mono font-medium">exrcz1337</span>
+          </div>
+        </div>
+
+        <div class="hidden sm:block w-px h-6 bg-zinc-800"></div>
+
+        <!-- Release Type -->
+        <div class="text-xs">
+          <span class="text-zinc-500 block text-[10px] uppercase tracking-wider">Type</span>
+          <span class="text-zinc-200 font-mono">Official / Stable</span>
+        </div>
+
+        <div class="hidden sm:block w-px h-6 bg-zinc-800"></div>
+
+        <!-- Security / Architecture -->
+        <div class="text-xs">
+          <span class="text-zinc-500 block text-[10px] uppercase tracking-wider">Branch</span>
+          <span class="text-zinc-200 font-mono">arm64-v8a</span>
+        </div>
+
+        <div class="hidden sm:block w-px h-6 bg-zinc-800"></div>
+
+        <!-- Verified Seal -->
+        <div class="flex items-center gap-1.5 text-xs text-zinc-300 font-mono">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span>PGP Verified</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Downloads Section Header -->
+    <div class="flex items-center justify-between mb-6 animate-fade-up delay-150">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        <h2 class="text-xl font-bold tracking-tight text-white">Available Mirrors</h2>
+      </div>
+      <span class="text-xs text-zinc-500 font-mono">4 Services Online</span>
+    </div>
+
+    <!-- Links Grid / Stack -->
+    <div class="space-y-4 mb-10">
+
+      <!-- ======================================================== -->
+      <!-- 1, 2, 3: GOOGLE DRIVE UNIFIED CARD WITH SELECTION (3 IN 1) -->
+      <!-- ======================================================== -->
+      <div class="rounded-2xl border border-zinc-800 bg-luna-card hover:border-zinc-600 transition-all duration-300 overflow-hidden shadow-lg shadow-black/40 hover:-translate-y-0.5 hover:shadow-zinc-900/30 animate-fade-up delay-150">
+        
+        <!-- Interactive Card Header / Main Button -->
+        <button 
+          id="gdrive-toggle-btn"
+          onclick="toggleGdriveSelector()"
+          aria-expanded="false"
+          class="w-full p-5 sm:p-6 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 group focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+        >
+          <div class="flex items-start sm:items-center gap-4">
+            <!-- Google Drive SVG Icon in monochrome -->
+            <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 group-hover:border-zinc-500 group-hover:scale-105 transition-all">
+              <svg class="w-6 h-6 text-zinc-200 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5z" opacity="0.75"/>
+                <path d="M22.85 15l-3.43 6H6.29l3.43-6h13.13z" opacity="0.95"/>
+                <path d="M16.29 3.5H9.71l6.57 11.5 3.43-6-3.42-5.5z"/>
+              </svg>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-lg font-bold text-white group-hover:text-zinc-200 transition-colors">
+                  Google Drive
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 font-mono text-zinc-300">
+                  3 Mirrors Available
+                </span>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-white text-black font-semibold uppercase tracking-wider">
+                  Recommended
+                </span>
+              </div>
+              <p class="text-zinc-400 text-sm mt-0.5">
+                High-speed primary server and alternative backup mirrors.
+              </p>
+            </div>
+          </div>
+
+          <!-- Selector Trigger Button Indicator -->
+          <div class="flex items-center self-end sm:self-center gap-2 text-xs font-mono text-zinc-300 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-700 group-hover:border-zinc-500 transition-all">
+            <span id="gdrive-status-label">Select Mirror</span>
+            <svg id="gdrive-chevron" class="w-4 h-4 text-zinc-400 transform transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </button>
+
+        <!-- Expandable Options List -->
+        <div id="gdrive-options" class="hidden border-t border-zinc-800/80 bg-zinc-950/60 p-4 sm:p-6 transition-all duration-300">
+          <div class="text-xs uppercase tracking-wider font-mono text-zinc-500 mb-3 px-1">
+            Choose Preferred Google Drive Node:
+          </div>
+
+          <div class="grid grid-cols-1 gap-2.5">
+
+            <!-- 1. Original -->
+            <a 
+              href="https://drive.google.com/open?id=SaukfGJFWkDTxTk" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="group/item flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:translate-x-1"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center font-mono text-xs text-white border border-zinc-700 group-hover/item:border-zinc-500 transition-colors">
+                  01
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-white group-hover/item:text-zinc-100">Original Release</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">Master</span>
+                  </div>
+                  <span class="text-xs text-zinc-500 font-mono block">Direct Google Drive Primary storage</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="hidden sm:inline text-xs font-mono text-zinc-400 group-hover/item:text-white transition-colors">Download</span>
+                <div class="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center group-hover/item:scale-105 transition-transform">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+
+            <!-- 2. Mirror 1 -->
+            <a 
+              href="https://drive.google.com/open?id=VUCvRQUFvPXuZjS" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="group/item flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:translate-x-1"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center font-mono text-xs text-white border border-zinc-700 group-hover/item:border-zinc-500 transition-colors">
+                  02
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-white group-hover/item:text-zinc-100">Mirror 1</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">Secondary</span>
+                  </div>
+                  <span class="text-xs text-zinc-500 font-mono block">Google Drive High-Speed Alternate</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="hidden sm:inline text-xs font-mono text-zinc-400 group-hover/item:text-white transition-colors">Download</span>
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 text-white border border-zinc-600 flex items-center justify-center group-hover/item:bg-zinc-700 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+
+            <!-- 3. Mirror 2 -->
+            <a 
+              href="https://drive.google.com/open?id=fwBLthDgFFuYGto" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="group/item flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/90 border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:translate-x-1"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center font-mono text-xs text-white border border-zinc-700 group-hover/item:border-zinc-500 transition-colors">
+                  03
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-white group-hover/item:text-zinc-100">Mirror 2</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">Backup</span>
+                  </div>
+                  <span class="text-xs text-zinc-500 font-mono block">Google Drive Redundant Cloud Node</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="hidden sm:inline text-xs font-mono text-zinc-400 group-hover/item:text-white transition-colors">Download</span>
+                <div class="w-8 h-8 rounded-lg bg-zinc-800 text-white border border-zinc-600 flex items-center justify-center group-hover/item:bg-zinc-700 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- 4. SOURCEFORGE — LUNA -->
+      <!-- ======================================================== -->
+      <a 
+        href="https://sourceforge.net" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="group block p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-luna-card hover:border-zinc-600 transition-all duration-300 shadow-md shadow-black/30 hover:-translate-y-0.5 hover:shadow-zinc-900/30 animate-fade-up delay-200"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-4">
+            <!-- SourceForge Flame/Funnels Monochrome Icon -->
+            <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 group-hover:border-zinc-500 group-hover:scale-105 transition-all">
+              <svg class="w-6 h-6 text-zinc-200 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.01 2.01A10 10 0 0 0 2 12.02a10 10 0 0 0 10.01 10.01A10 10 0 0 0 22.02 12a10 10 0 0 0-10.01-9.99zm-4.3 14.18c-1.3-.23-2.09-.99-2.09-2.04 0-1.12.83-1.89 2.1-2.12l3.41-.63v-1.15c0-.98-.62-1.52-1.74-1.52-.96 0-1.54.42-1.72 1.13l-1.87-.5c.38-1.39 1.63-2.22 3.6-2.22 2.37 0 3.73 1.17 3.73 3.09v6.78h-1.88v-1.33c-.7.9-1.9 1.4-3.54 1.51zm3.41-3.23l-3.08.57c-.6.11-.97.45-.97.94 0 .52.43.91 1.09.91 1.06 0 2.22-.61 2.96-1.5v-.92z"/>
+              </svg>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-bold text-white group-hover:text-zinc-200 transition-colors">
+                  SourceForge
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono border border-zinc-700">
+                  luna
+                </span>
+              </div>
+              <p class="text-zinc-400 text-sm mt-0.5">
+                Global Open Source CDN & release archive for luna build.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center self-end sm:self-center gap-2">
+            <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Browse Mirror</span>
+            <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-300 group-hover:border-zinc-500 group-hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- ======================================================== -->
+      <!-- 5. PIXELDRAIN -->
+      <!-- ======================================================== -->
+      <a 
+        href="https://pixeldrain.com" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="group block p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-luna-card hover:border-zinc-600 transition-all duration-300 shadow-md shadow-black/30 hover:-translate-y-0.5 hover:shadow-zinc-900/30 animate-fade-up delay-250"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-4">
+            <!-- PixelDrain Lightning / Cloud Bolt Icon -->
+            <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 group-hover:border-zinc-500 group-hover:scale-105 transition-all">
+              <svg class="w-6 h-6 text-zinc-200 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.15"/>
+              </svg>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-bold text-white group-hover:text-zinc-200 transition-colors">
+                  PixelDrain
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono border border-zinc-700">
+                  Direct CDN
+                </span>
+              </div>
+              <p class="text-zinc-400 text-sm mt-0.5">
+                Unthrottled direct downloads without queue or captcha wait times.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center self-end sm:self-center gap-2">
+            <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Direct Link</span>
+            <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-300 group-hover:border-zinc-500 group-hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- ======================================================== -->
+      <!-- 6. TELEGRAM -->
+      <!-- ======================================================== -->
+      <a 
+        id="telegram-card"
+        href="https://t.me" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="group block p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-luna-card hover:border-zinc-600 transition-all duration-300 shadow-md shadow-black/30 hover:-translate-y-0.5 hover:shadow-zinc-900/30 animate-fade-up delay-300"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-4">
+            <!-- Telegram Paper Airplane Icon -->
+            <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 group-hover:border-zinc-500 group-hover:scale-105 transition-all">
+              <svg class="w-6 h-6 text-zinc-200 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+              </svg>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-bold text-white group-hover:text-zinc-200 transition-colors">
+                  Telegram Channel & Support
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono border border-zinc-700">
+                  Community
+                </span>
+              </div>
+              <p class="text-zinc-400 text-sm mt-0.5">
+                Join discussions, obtain hotfix patches, and connect directly with exrcz1337.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center self-end sm:self-center gap-2">
+            <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Join Channel</span>
+            <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-300 group-hover:border-zinc-500 group-hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Notes / Flashing Advice Accordion -->
+    <div class="border border-zinc-900 rounded-2xl bg-zinc-950/20 p-5 mb-16 backdrop-blur-sm animate-fade-up delay-400">
+      <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-3 flex items-center gap-2">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Installation Guidelines
+      </h3>
+      <ul class="text-xs text-zinc-400 space-y-1.5 list-disc list-inside font-mono">
+        <li>Clean flash is recommended when updating across major Android releases.</li>
+        <li>Ensure recovery matches firmware requirements for <span class="text-zinc-200">chatoite</span>.</li>
+        <li>Google Drive links can be pasted into aria2c or multi-threaded downloaders.</li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600 font-mono">
+      <div class="flex items-center gap-2">
+        <span>lunaPortal</span>
+        <span>•</span>
+        <span>LunarisAOSP for chatoite</span>
+      </div>
+      <div>
+        Maintained with care by <span class="text-zinc-400 font-semibold">exrcz1337</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Interactive Script & Animated Background Engine -->
+  <script>
+    // ----------------------------------------------------
+    // 1. Interactive Monochrome Celestial Particle Canvas
+    // ----------------------------------------------------
+    (function initLunarCanvas() {
+      const canvas = document.getElementById('lunar-canvas');
+      const ctx = canvas.getContext('2d');
+
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+
+      const particles = [];
+      const particleCount = Math.min(Math.floor((width * height) / 16000), 70);
+
+      const mouse = { x: -2000, y: -2000, radius: 130 };
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }, { passive: true });
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      }, { passive: true });
+
+      window.addEventListener('mouseleave', () => {
+        mouse.x = -2000;
+        mouse.y = -2000;
+      }, { passive: true });
+
+      // Support gentle touch interaction
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          mouse.x = e.touches[0].clientX;
+          mouse.y = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        mouse.x = -2000;
+        mouse.y = -2000;
+      }, { passive: true });
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.vx = (Math.random() - 0.5) * 0.35;
+          this.vy = (Math.random() - 0.5) * 0.35;
+          this.radius = Math.random() * 1.4 + 0.6;
+          this.baseAlpha = Math.random() * 0.45 + 0.15;
+          this.alpha = this.baseAlpha;
+          this.pulsePhase = Math.random() * Math.PI * 2;
+          this.pulseSpeed = Math.random() * 0.02 + 0.006;
+        }
+
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.pulsePhase += this.pulseSpeed;
+          this.alpha = this.baseAlpha + Math.sin(this.pulsePhase) * 0.12;
+
+          // Wrap boundaries
+          if (this.x < -10) this.x = width + 10;
+          if (this.x > width + 10) this.x = -10;
+          if (this.y < -10) this.y = height + 10;
+          if (this.y > height + 10) this.y = -10;
+
+          // Mouse proximity reaction
+          const dx = this.x - mouse.x;
+          const dy = this.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < mouse.radius && dist > 0) {
+            const force = (1 - dist / mouse.radius) * 1.1;
+            this.x += (dx / dist) * force;
+            this.y += (dy / dist) * force;
+          }
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, this.alpha)})`;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw faint constellation linkages between nearby particles
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < 110) {
+              const lineAlpha = (1 - dist / 110) * 0.09;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`;
+              ctx.lineWidth = 0.65;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw and update particle points
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    })();
+
+    // ----------------------------------------------------
+    // 2. Google Drive Accordion / Mirrors Selector Toggle
+    // ----------------------------------------------------
+    let isGdriveOpen = false;
+
+    function toggleGdriveSelector() {
+      const options = document.getElementById('gdrive-options');
+      const chevron = document.getElementById('gdrive-chevron');
+      const statusLabel = document.getElementById('gdrive-status-label');
+      const toggleBtn = document.getElementById('gdrive-toggle-btn');
+
+      isGdriveOpen = !isGdriveOpen;
+
+      if (isGdriveOpen) {
+        options.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+        statusLabel.textContent = 'Close Mirrors';
+        toggleBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        options.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+        statusLabel.textContent = 'Select Mirror';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+  </script>
+</body>
+</html>
